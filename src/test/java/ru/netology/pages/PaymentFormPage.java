@@ -37,14 +37,19 @@ public class PaymentFormPage {
         fillField(year, data.getYear());
         fillField(cardOwner, data.getCardOwner());
         fillField(cvc, data.getCvc());
-        /*
-        card.$(inputClass).setValue(data.getCardNumber());
-        month.$(inputClass).setValue(data.getMonth());
-        year.$(inputClass).setValue(data.getYear());
-        cardOwner.$(inputClass).setValue(data.getCardOwner());
-        cvc.$(inputClass).setValue(data.getCvc());
+    }
 
-         */
+    public void fillField(SelenideElement element, String value) {
+        element.$(inputClass).setValue(value);
+    }
+
+    public String getFieldValue(SelenideElement element) {
+        return element.$(inputClass).getValue();
+    }
+
+    public void clearField(SelenideElement element) {
+        element.$(inputClass).sendKeys(Keys.CONTROL + "A");
+        element.$(inputClass).sendKeys(Keys.BACK_SPACE);
     }
 
     public void checkSuccessNotification() {
@@ -75,19 +80,6 @@ public class PaymentFormPage {
 
     public void checkCVCErrorIndication() {
         cvc.$(indicationClass).shouldHave(exactText("Неверный формат"));
-    }
-
-    public void fillField(SelenideElement element, String value) {
-        element.$(inputClass).setValue(value);
-    }
-
-    public String getFieldValue(SelenideElement element) {
-        return element.$(inputClass).getValue();
-    }
-
-    public void clearField(SelenideElement element) {
-        element.$(inputClass).sendKeys(Keys.CONTROL + "A");
-        element.$(inputClass).sendKeys(Keys.BACK_SPACE);
     }
 
     public void clearTheForm() {
