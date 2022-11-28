@@ -1,17 +1,19 @@
 package ru.netology.test;
 
 import com.codeborne.selenide.Configuration;
+import com.codeborne.selenide.logevents.SelenideLogger;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.*;
 import ru.netology.helpers.DataHelper;
 import ru.netology.helpers.SQLHelper;
 import ru.netology.pages.DashboardPage;
 import ru.netology.pages.PaymentFormPage;
+import io.qameta.allure.selenide.AllureSelenide;
 
 import static com.codeborne.selenide.Selenide.open;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class OrderTest {
+public class PaymentTest {
     static DashboardPage dashboardPage;
     static PaymentFormPage paymentForm;
     final String approved = "APPROVED";
@@ -22,8 +24,10 @@ public class OrderTest {
     final String ordersTable = "order_entity";
     final String paymentsTable = "payment_entity";
 
+
     @BeforeAll
-    static void setTimeout() {
+    static void setUpAll() {
+        SelenideLogger.addListener("allure", new AllureSelenide());
         Configuration.timeout = 10000;
     }
 
@@ -47,7 +51,7 @@ public class OrderTest {
         paymentForm.checkSuccessNotification();
         assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
         assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFrom(paymentsTable));
+        assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
     }
 
     @Test
@@ -62,7 +66,7 @@ public class OrderTest {
         paymentForm.checkSuccessNotification();
         assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
         assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFrom(paymentsTable));
+        assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
     }
 
     @Test
@@ -77,7 +81,7 @@ public class OrderTest {
         paymentForm.checkSuccessNotification();
         assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
         assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFrom(paymentsTable));
+        assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
     }
 
 
@@ -93,7 +97,7 @@ public class OrderTest {
         paymentForm.checkSuccessNotification();
         assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
         assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFrom(paymentsTable));
+        assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
     }
 
     @Test
@@ -108,7 +112,7 @@ public class OrderTest {
         paymentForm.checkSuccessNotification();
         assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
         assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFrom(paymentsTable));
+        assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
     }
 
     @Test
@@ -127,7 +131,7 @@ public class OrderTest {
         paymentForm.checkSuccessNotification();
         assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
         assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFrom(paymentsTable));
+        assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
     }
 
     @Test
@@ -146,7 +150,7 @@ public class OrderTest {
         paymentForm.checkSuccessNotification();
         assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
         assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFrom(paymentsTable));
+        assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
     }
 
     @Test
@@ -165,7 +169,7 @@ public class OrderTest {
         paymentForm.checkSuccessNotification();
         assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
         assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFrom(paymentsTable));
+        assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
     }
 
     @Test
@@ -180,7 +184,7 @@ public class OrderTest {
         paymentForm.checkSuccessNotification();
         assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
         assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFrom(paymentsTable));
+        assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
     }
 
     @Test
@@ -195,7 +199,7 @@ public class OrderTest {
         paymentForm.checkErrorNotification();
         assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
         assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-        assertEquals(declined, SQLHelper.getLastStatusFrom(paymentsTable));
+        assertEquals(declined, SQLHelper.getLastStatusFromPaymentsTable());
     }
 
     @Test
@@ -536,9 +540,17 @@ public class OrderTest {
         assertEquals("", actual);
     }
 
+    /*
     @AfterAll
     @SneakyThrows
     static void cleanDB() {
         SQLHelper.cleanDatabase();
+    }
+
+     */
+
+    @AfterAll
+    static void tearDownAll() {
+        SelenideLogger.removeListener("allure");
     }
 }

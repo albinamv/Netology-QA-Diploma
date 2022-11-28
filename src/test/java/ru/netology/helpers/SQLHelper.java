@@ -44,9 +44,38 @@ public class SQLHelper {
     }
 
     @SneakyThrows
+    public static String getLastStatusFromPaymentsTable() {
+        var statusQuery = "SELECT status FROM payment_entity WHERE transaction_id = (SELECT payment_id FROM order_entity ORDER BY created DESC LIMIT 1);";
+        String status;
+
+        try (
+                var conn = DriverManager.getConnection(urlMySQL, userDB, passwordDB);
+        ) {
+            status = runner.query(conn, statusQuery, new ScalarHandler<>());
+        }
+        return status;
+
+    }
+
+    @SneakyThrows
+    public static String getLastStatusFromCreditsTable() {
+        var statusQuery = "SELECT status FROM credit_request_entity WHERE bank_id = (SELECT credit_id FROM order_entity ORDER BY created DESC LIMIT 1);";
+        String status;
+
+        try (
+                var conn = DriverManager.getConnection(urlMySQL, userDB, passwordDB);
+        ) {
+            status = runner.query(conn, statusQuery, new ScalarHandler<>());
+        }
+        return status;
+
+    }
+
+    /*
+    @SneakyThrows
     public static String getLastStatusFrom(String tableName) {
         if (tableExists(tableName)) {
-            var statusQuery = "SELECT status FROM payment_entity ORDER BY created DESC LIMIT 1;";
+            var statusQuery = "SELECT status FROM " + tableName + " ORDER BY created DESC LIMIT 1;";
             String status;
 
             try (
@@ -58,8 +87,9 @@ public class SQLHelper {
         } else {
             return null;
         }
-
     }
+
+     */
 
 
     @SneakyThrows
