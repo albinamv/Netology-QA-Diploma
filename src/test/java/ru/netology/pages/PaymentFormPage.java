@@ -11,7 +11,7 @@ import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
 
 @Getter
-public class PaymentFormPage {
+public class PaymentFormPage extends FormPage {
     private SelenideElement heading = $$("h3").findBy(text("Оплата по карте"));
 
     private SelenideElement card = $(byText("Номер карты")).parent();
@@ -63,23 +63,43 @@ public class PaymentFormPage {
     }
 
     public void checkCardErrorIndication() {
-        card.$(indicationClass).shouldHave(exactText("Неверный формат"));
+        card.$(indicationClass).should(exist).shouldHave(exactText("Неверный формат"));
     }
 
-    public void checkMonthErrorEmpty() {
-        month.$(indicationClass).shouldHave(exactText("Неверный формат"));
+    public void checkMonthWrongFormatOrEmpty() {
+        month.$(indicationClass).should(exist).shouldHave(exactText("Неверный формат"));
     }
 
-    public void checkYearErrorEmpty() {
-        year.$(indicationClass).shouldHave(exactText("Неверный формат"));
+    public void checkMonthWrongExpiryDate() {
+        month.$(indicationClass).should(exist).shouldHave(exactText("Неверно указан срок действия карты"));
+    }
+
+    public void checkYearWrongFormatOrEmpty() {
+        year.$(indicationClass).should(exist).shouldHave(exactText("Неверный формат"));
+    }
+
+    public void checkYearErrorExpired() {
+        year.$(indicationClass).should(exist).shouldHave(exactText("Истёк срок действия карты"));
+    }
+
+    public void checkYearWrongExpiryDate() {
+        year.$(indicationClass).should(exist).shouldHave(exactText("Неверно указан срок действия карты"));
     }
 
     public void checkCardOwnerErrorEmpty() {
-        cardOwner.$(indicationClass).shouldHave(exactText("Поле обязательно для заполнения"));
+        cardOwner.$(indicationClass).should(exist).shouldHave(exactText("Поле обязательно для заполнения"));
+    }
+
+    public void checkCardOwnerAsWrittenOnCard() {
+        cardOwner.$(indicationClass).should(exist).shouldHave(exactText("Введите имя и фамилию, как указано на карте"));
+    }
+
+    public void checkCardOwnerWrongFormat() {
+        cardOwner.$(indicationClass).should(exist).shouldHave(exactText("Только латинские символы (A-Z), пробел и дефис"));
     }
 
     public void checkCVCErrorIndication() {
-        cvc.$(indicationClass).shouldHave(exactText("Неверный формат"));
+        cvc.$(indicationClass).should(exist).shouldHave(exactText("Неверный формат"));
     }
 
     public void clearTheForm() {
