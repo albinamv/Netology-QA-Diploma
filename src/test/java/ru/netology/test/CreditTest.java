@@ -1,6 +1,8 @@
 package ru.netology.test;
 
 import com.codeborne.selenide.Configuration;
+import com.codeborne.selenide.logevents.SelenideLogger;
+import io.qameta.allure.selenide.AllureSelenide;
 import org.junit.jupiter.api.*;
 import ru.netology.helpers.DataHelper;
 import ru.netology.helpers.SQLHelper;
@@ -22,8 +24,8 @@ public class CreditTest {
     final String creditRequestsTable = "credit_request_entity";
 
     @BeforeAll
-    static void setTimeout() {
-        Configuration.timeout = 10000;
+    static void setUpAll() {
+        SelenideLogger.addListener("allure", new AllureSelenide());
     }
 
     @BeforeEach
@@ -34,168 +36,178 @@ public class CreditTest {
         creditForm = dashboardPage.openCreditForm();
     }
 
-    @Test
-    @DisplayName("1. Payment approved (Happy path)")
-    void shouldApprovePaymentWithValidData() {
-        long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
-        long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
+    @Nested
+    class IncreasedTimeout {
+        @BeforeEach
+        void setTimeout() {
+            Configuration.timeout = 10000;
+        }
 
-        creditForm.fillTheForm(DataHelper.generateValidCardData(expiryYears));
-        creditForm.getContinueButton().click();
+        @Test
+        @DisplayName("1. Payment approved (Happy path)")
+        void shouldApprovePaymentWithValidData() {
+            long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
+            long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
 
-        creditForm.checkSuccessNotification();
-        assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
-        assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
+            creditForm.fillTheForm(DataHelper.generateValidCardData(expiryYears));
+            creditForm.getContinueButton().click();
+
+            creditForm.checkSuccessNotification();
+            assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
+            assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
+            assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
+        }
+
+        @Test
+        @DisplayName("2. Send form with max expiry year")
+        void shouldSendFormWithMaxExpiryYear() {
+            long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
+            long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
+
+            creditForm.fillTheForm(DataHelper.generateCardDataWithShiftedYearFromCurrent(expiryYears));
+            creditForm.getContinueButton().click();
+
+            creditForm.checkSuccessNotification();
+            assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
+            assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
+            assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
+        }
+
+        @Test
+        @DisplayName("3. Send form with max-1 expiry year")
+        void shouldSendFormWithExpiryYearBelowMax() {
+            long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
+            long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
+
+            creditForm.fillTheForm(DataHelper.generateCardDataWithShiftedYearFromCurrent(expiryYears - 1));
+            creditForm.getContinueButton().click();
+
+            creditForm.checkSuccessNotification();
+            assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
+            assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
+            assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
+        }
+
+
+        @Test
+        @DisplayName("4. Send form with expiry date in current month")
+        void shouldSendFormWithExpiryDateInCurrentMonth() {
+            long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
+            long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
+
+            creditForm.fillTheForm(DataHelper.generateCardDataWithShiftedMonthFromCurrent(0));
+            creditForm.getContinueButton().click();
+
+            creditForm.checkSuccessNotification();
+            assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
+            assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
+            assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
+        }
+
+        @Test
+        @DisplayName("5. Send form with expiry date in next month")
+        void shouldSendFormWithExpiryDateInNextMonth() {
+            long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
+            long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
+
+            creditForm.fillTheForm(DataHelper.generateCardDataWithShiftedMonthFromCurrent(1));
+            creditForm.getContinueButton().click();
+
+            creditForm.checkSuccessNotification();
+            assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
+            assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
+            assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
+        }
+
+        @Test
+        @DisplayName("6. Send form with card owner length in 26 symbols")
+        void shouldSendFormWithCardOwnerInLessThanMaxSymbols() {
+            long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
+            long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
+
+            creditForm.fillTheForm(new DataHelper.CardData(DataHelper.getApprovedCardNumber(),
+                    DataHelper.generateMonth(),
+                    DataHelper.generateShiftedYearFromCurrent(expiryYears),
+                    DataHelper.generateCardOwnerWithFixedLength("en",cardOwnerMaxLength - 1),
+                    DataHelper.generateNumericCode(3)));
+            creditForm.getContinueButton().click();
+
+            creditForm.checkSuccessNotification();
+            assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
+            assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
+            assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
+        }
+
+        @Test
+        @DisplayName("7. Send form with card owner max length")
+        void shouldSendFormWithCardOwnerMaxLength() {
+            long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
+            long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
+
+            creditForm.fillTheForm(new DataHelper.CardData(DataHelper.getApprovedCardNumber(),
+                    DataHelper.generateMonth(),
+                    DataHelper.generateShiftedYearFromCurrent(expiryYears),
+                    DataHelper.generateCardOwnerWithFixedLength("en",cardOwnerMaxLength),
+                    DataHelper.generateNumericCode(3)));
+            creditForm.getContinueButton().click();
+
+            creditForm.checkSuccessNotification();
+            assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
+            assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
+            assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
+        }
+
+        @Test
+        @DisplayName("8. Send form with card owner with hyphen")
+        void shouldSendFormWithCardOwnerWithHyphen() {
+            long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
+            long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
+
+            creditForm.fillTheForm(new DataHelper.CardData(DataHelper.getApprovedCardNumber(),
+                    DataHelper.generateMonth(),
+                    DataHelper.generateShiftedYearFromCurrent(expiryYears),
+                    DataHelper.getCardOwnerWithHyphen(),
+                    DataHelper.generateNumericCode(3)));
+            creditForm.getContinueButton().click();
+
+            creditForm.checkSuccessNotification();
+            assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
+            assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
+            assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
+        }
+
+        @Test
+        @DisplayName("9. Send form with zero CVC")
+        void shouldSendFormWithZeroCVC() {
+            long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
+            long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
+
+            creditForm.fillTheForm(DataHelper.generateCardDataWithZeroCVC(expiryYears));
+            creditForm.getContinueButton().click();
+
+            creditForm.checkSuccessNotification();
+            assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
+            assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
+            assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
+        }
+
+        @Test
+        @DisplayName("10. Send form with declined card")
+        void shouldSendFormWithDeclinedCard() {
+            long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
+            long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
+
+            creditForm.fillTheForm(DataHelper.generateCardDataWithDeclinedCard(expiryYears));
+            creditForm.getContinueButton().click();
+
+            creditForm.checkErrorNotification();
+            assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
+            assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
+            assertEquals(declined, SQLHelper.getLastStatusFromCreditsTable());
+        }
+
     }
 
-    @Test
-    @DisplayName("2. Send form with max expiry year")
-    void shouldSendFormWithMaxExpiryYear() {
-        long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
-        long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
-
-        creditForm.fillTheForm(DataHelper.generateCardDataWithShiftedYearFromCurrent(expiryYears));
-        creditForm.getContinueButton().click();
-
-        creditForm.checkSuccessNotification();
-        assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
-        assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
-    }
-
-    @Test
-    @DisplayName("3. Send form with max-1 expiry year")
-    void shouldSendFormWithExpiryYearBelowMax() {
-        long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
-        long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
-
-        creditForm.fillTheForm(DataHelper.generateCardDataWithShiftedYearFromCurrent(expiryYears - 1));
-        creditForm.getContinueButton().click();
-
-        creditForm.checkSuccessNotification();
-        assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
-        assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
-    }
-
-
-    @Test
-    @DisplayName("4. Send form with expiry date in current month")
-    void shouldSendFormWithExpiryDateInCurrentMonth() {
-        long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
-        long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
-
-        creditForm.fillTheForm(DataHelper.generateCardDataExpireInShiftedMonthFromCurrent(0));
-        creditForm.getContinueButton().click();
-
-        creditForm.checkSuccessNotification();
-        assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
-        assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
-    }
-
-    @Test
-    @DisplayName("5. Send form with expiry date in next month")
-    void shouldSendFormWithExpiryDateInNextMonth() {
-        long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
-        long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
-
-        creditForm.fillTheForm(DataHelper.generateCardDataExpireInShiftedMonthFromCurrent(1));
-        creditForm.getContinueButton().click();
-
-        creditForm.checkSuccessNotification();
-        assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
-        assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
-    }
-
-    @Test
-    @DisplayName("6. Send form with card owner length in 26 symbols")
-    void shouldSendFormWithCardOwnerInLessThanMaxSymbols() {
-        long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
-        long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
-
-        creditForm.fillTheForm(new DataHelper.CardData(DataHelper.getApprovedCardNumber(),
-                DataHelper.generateMonth(),
-                DataHelper.generateShiftedYearFromCurrent(expiryYears),
-                DataHelper.generateCardOwnerWithFixedLength("en",cardOwnerMaxLength - 1),
-                DataHelper.generateNumericCode(3)));
-        creditForm.getContinueButton().click();
-
-        creditForm.checkSuccessNotification();
-        assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
-        assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
-    }
-
-    @Test
-    @DisplayName("7. Send form with card owner max length")
-    void shouldSendFormWithCardOwnerMaxLength() {
-        long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
-        long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
-
-        creditForm.fillTheForm(new DataHelper.CardData(DataHelper.getApprovedCardNumber(),
-                DataHelper.generateMonth(),
-                DataHelper.generateShiftedYearFromCurrent(expiryYears),
-                DataHelper.generateCardOwnerWithFixedLength("en",cardOwnerMaxLength),
-                DataHelper.generateNumericCode(3)));
-        creditForm.getContinueButton().click();
-
-        creditForm.checkSuccessNotification();
-        assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
-        assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
-    }
-
-    @Test
-    @DisplayName("8. Send form with card owner with hyphen")
-    void shouldSendFormWithCardOwnerWithHyphen() {
-        long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
-        long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
-
-        creditForm.fillTheForm(new DataHelper.CardData(DataHelper.getApprovedCardNumber(),
-                DataHelper.generateMonth(),
-                DataHelper.generateShiftedYearFromCurrent(expiryYears),
-                DataHelper.getCardOwnerWithHyphen(),
-                DataHelper.generateNumericCode(3)));
-        creditForm.getContinueButton().click();
-
-        creditForm.checkSuccessNotification();
-        assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
-        assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
-    }
-
-    @Test
-    @DisplayName("9. Send form with zero CVC")
-    void shouldSendFormWithZeroCVC() {
-        long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
-        long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
-
-        creditForm.fillTheForm(DataHelper.generateCardDataWithZeroCVC(expiryYears));
-        creditForm.getContinueButton().click();
-
-        creditForm.checkSuccessNotification();
-        assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
-        assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
-        assertEquals(approved, SQLHelper.getLastStatusFromCreditsTable());
-    }
-
-    @Test
-    @DisplayName("10. Send form with declined card")
-    void shouldSendFormWithDeclinedCard() {
-        long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
-        long rowsCreditsBefore = SQLHelper.getRowsAmountFrom(creditRequestsTable);
-
-        creditForm.fillTheForm(DataHelper.generateCardDataWithDeclinedCard(expiryYears));
-        creditForm.getContinueButton().click();
-
-        creditForm.checkErrorNotification();
-        assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
-        assertEquals(rowsCreditsBefore + 1, SQLHelper.getRowsAmountFrom(creditRequestsTable));
-        assertEquals(declined, SQLHelper.getLastStatusFromCreditsTable());
-    }
 
     @Test
     @DisplayName("11. Should not send form without card number")
@@ -430,7 +442,7 @@ public class CreditTest {
     @Test
     @DisplayName("32. Should not send form with card expired in previous month")
     void shouldNotSendFormWithExpiryDateInPrevMonth() {
-        creditForm.fillTheForm(DataHelper.generateCardDataExpireInShiftedMonthFromCurrent(-1));
+        creditForm.fillTheForm(DataHelper.generateCardDataWithShiftedMonthFromCurrent(-1));
         creditForm.getContinueButton().click();
 
         creditForm.checkMonthWrongExpiryDate();
@@ -490,11 +502,7 @@ public class CreditTest {
     @Test
     @DisplayName("37. Should not send form card owner more than 27 symbols")
     void shouldNotSendFormWithOverlongCardOwner() {
-        creditForm.fillTheForm(new DataHelper.CardData(DataHelper.getApprovedCardNumber(),
-                DataHelper.generateMonth(),
-                DataHelper.generateShiftedYearFromCurrent(expiryYears),
-                DataHelper.generateOverlongCardOwner("en"),
-                DataHelper.generateNumericCode(3)));
+        creditForm.fillTheForm(DataHelper.generateCardDataWithCardOwnerFixedLength(cardOwnerMaxLength + 1, expiryYears));
         creditForm.getContinueButton().click();
 
         creditForm.checkCardOwnerAsWrittenOnCard();
@@ -543,4 +551,9 @@ public class CreditTest {
     }
 
      */
+
+    @AfterAll
+    static void tearDownAll() {
+        SelenideLogger.removeListener("allure");
+    }
 }
