@@ -1,39 +1,25 @@
 package ru.netology.test;
 
 import com.codeborne.selenide.Configuration;
-import com.codeborne.selenide.logevents.SelenideLogger;
 import org.junit.jupiter.api.*;
 import ru.netology.helpers.DataHelper;
 import ru.netology.helpers.SQLHelper;
 import ru.netology.pages.DashboardPage;
 import ru.netology.pages.PaymentFormPage;
-import io.qameta.allure.selenide.AllureSelenide;
-
-import javax.xml.crypto.Data;
 
 import static com.codeborne.selenide.Selenide.open;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PaymentTest {
+public class PaymentTest extends TestBase {
     static DashboardPage dashboardPage;
     static PaymentFormPage paymentForm;
-    final String approved = "APPROVED";
-    final String declined = "DECLINED";
-    final int expiryYears = 5;
-    final int cardOwnerMaxLength = 27;
-    final int cardNumberMaxLength = 16;
 
-    final String ordersTable = "order_entity";
     final String paymentsTable = "payment_entity";
-
-    @BeforeAll
-    static void setUpAll() {
-        SelenideLogger.addListener("allure", new AllureSelenide());
-    }
+    String expectedPrice = "4500000";
 
     @BeforeEach
     void openHost() {
-        open("http://localhost:8080");
+        open(testHost);
 
         dashboardPage = new DashboardPage();
         paymentForm = dashboardPage.openPaymentForm();
@@ -61,13 +47,15 @@ public class PaymentTest {
             // проверки на изменение кол-ва записей в БД (что точно добавилась новая запись)
             assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
             assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-            // TODO проверить, что добавляется сумма 45 000
+            SQLHelper.Payment lastEntry = SQLHelper.getLastEntryFromPaymentsTable();
+            // проверка суммы оплаты
+            assertEquals(expectedPrice, lastEntry.getAmount());
             // проверка статуса последней записи
-            assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
+            assertEquals(approved, lastEntry.getStatus());
         }
 
         @Test
-        @DisplayName("2. Send form with max expiry year")
+        @DisplayName("2. Max expiry year")
         void shouldSendFormWithMaxExpiryYear() {
             long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
             long rowsPaymentsBefore = SQLHelper.getRowsAmountFrom(paymentsTable);
@@ -78,11 +66,13 @@ public class PaymentTest {
             paymentForm.checkSuccessNotification();
             assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
             assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-            assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
+            SQLHelper.Payment lastEntry = SQLHelper.getLastEntryFromPaymentsTable();
+            assertEquals(expectedPrice, lastEntry.getAmount());
+            assertEquals(approved, lastEntry.getStatus());
         }
 
         @Test
-        @DisplayName("3. Send form with max-1 expiry year")
+        @DisplayName("3. Max-1 expiry year")
         void shouldSendFormWithExpiryYearBelowMax() {
             long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
             long rowsPaymentsBefore = SQLHelper.getRowsAmountFrom(paymentsTable);
@@ -93,12 +83,14 @@ public class PaymentTest {
             paymentForm.checkSuccessNotification();
             assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
             assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-            assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
+            SQLHelper.Payment lastEntry = SQLHelper.getLastEntryFromPaymentsTable();
+            assertEquals(expectedPrice, lastEntry.getAmount());
+            assertEquals(approved, lastEntry.getStatus());
         }
 
 
         @Test
-        @DisplayName("4. Send form with expiry date in current month")
+        @DisplayName("4. Expiry date in current month")
         void shouldSendFormWithExpiryDateInCurrentMonth() {
             long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
             long rowsPaymentsBefore = SQLHelper.getRowsAmountFrom(paymentsTable);
@@ -109,11 +101,13 @@ public class PaymentTest {
             paymentForm.checkSuccessNotification();
             assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
             assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-            assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
+            SQLHelper.Payment lastEntry = SQLHelper.getLastEntryFromPaymentsTable();
+            assertEquals(expectedPrice, lastEntry.getAmount());
+            assertEquals(approved, lastEntry.getStatus());
         }
 
         @Test
-        @DisplayName("5. Send form with expiry date in next month")
+        @DisplayName("5. Expiry date in next month")
         void shouldSendFormWithExpiryDateInNextMonth() {
             long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
             long rowsPaymentsBefore = SQLHelper.getRowsAmountFrom(paymentsTable);
@@ -124,11 +118,13 @@ public class PaymentTest {
             paymentForm.checkSuccessNotification();
             assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
             assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-            assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
+            SQLHelper.Payment lastEntry = SQLHelper.getLastEntryFromPaymentsTable();
+            assertEquals(expectedPrice, lastEntry.getAmount());
+            assertEquals(approved, lastEntry.getStatus());
         }
 
         @Test
-        @DisplayName("6. Send form with card owner length in 26 symbols")
+        @DisplayName("6. Card owner length = 26 symbols (max-1)")
         void shouldSendFormWithCardOwnerInLessThanMaxSymbols() {
             long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
             long rowsPaymentsBefore = SQLHelper.getRowsAmountFrom(paymentsTable);
@@ -139,11 +135,13 @@ public class PaymentTest {
             paymentForm.checkSuccessNotification();
             assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
             assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-            assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
+            SQLHelper.Payment lastEntry = SQLHelper.getLastEntryFromPaymentsTable();
+            assertEquals(expectedPrice, lastEntry.getAmount());
+            assertEquals(approved, lastEntry.getStatus());
         }
 
         @Test
-        @DisplayName("7. Send form with card owner max length")
+        @DisplayName("7. Card owner max length")
         void shouldSendFormWithCardOwnerMaxLength() {
             long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
             long rowsPaymentsBefore = SQLHelper.getRowsAmountFrom(paymentsTable);
@@ -154,11 +152,13 @@ public class PaymentTest {
             paymentForm.checkSuccessNotification();
             assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
             assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-            assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
+            SQLHelper.Payment lastEntry = SQLHelper.getLastEntryFromPaymentsTable();
+            assertEquals(expectedPrice, lastEntry.getAmount());
+            assertEquals(approved, lastEntry.getStatus());
         }
 
         @Test
-        @DisplayName("8. Send form with card owner with hyphen")
+        @DisplayName("8. Card owner with hyphen")
         void shouldSendFormWithCardOwnerWithHyphen() {
             long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
             long rowsPaymentsBefore = SQLHelper.getRowsAmountFrom(paymentsTable);
@@ -169,11 +169,13 @@ public class PaymentTest {
             paymentForm.checkSuccessNotification();
             assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
             assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-            assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
+            SQLHelper.Payment lastEntry = SQLHelper.getLastEntryFromPaymentsTable();
+            assertEquals(expectedPrice, lastEntry.getAmount());
+            assertEquals(approved, lastEntry.getStatus());
         }
 
         @Test
-        @DisplayName("9. Send form with zero CVC")
+        @DisplayName("9. Valid data with zero CVC")
         void shouldSendFormWithZeroCVC() {
             long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
             long rowsPaymentsBefore = SQLHelper.getRowsAmountFrom(paymentsTable);
@@ -184,11 +186,13 @@ public class PaymentTest {
             paymentForm.checkSuccessNotification();
             assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
             assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-            assertEquals(approved, SQLHelper.getLastStatusFromPaymentsTable());
+            SQLHelper.Payment lastEntry = SQLHelper.getLastEntryFromPaymentsTable();
+            assertEquals(expectedPrice, lastEntry.getAmount());
+            assertEquals(approved, lastEntry.getStatus());
         }
 
         @Test
-        @DisplayName("10. Send form with declined card")
+        @DisplayName("10. Declined payment")
         void shouldSendFormWithDeclinedCard() {
             long rowsOrdersBefore = SQLHelper.getRowsAmountFrom(ordersTable);
             long rowsPaymentsBefore = SQLHelper.getRowsAmountFrom(paymentsTable);
@@ -199,12 +203,14 @@ public class PaymentTest {
             paymentForm.checkErrorNotification();
             assertEquals(rowsOrdersBefore + 1, SQLHelper.getRowsAmountFrom(ordersTable));
             assertEquals(rowsPaymentsBefore + 1, SQLHelper.getRowsAmountFrom(paymentsTable));
-            assertEquals(declined, SQLHelper.getLastStatusFromPaymentsTable());
+            SQLHelper.Payment lastEntry = SQLHelper.getLastEntryFromPaymentsTable();
+            assertEquals(expectedPrice, lastEntry.getAmount());
+            assertEquals(declined, lastEntry.getStatus());
         }
     }
 
     @Test
-    @DisplayName("11. Should not send form without card number")
+    @DisplayName("11. Empty card number")
     void shouldNotSendFormWithoutCardNumber() {
         paymentForm.fillTheForm(DataHelper.generateValidCardData(expiryYears));
         paymentForm.clearField(paymentForm.getCard());
@@ -214,7 +220,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("12. Should not send form without month")
+    @DisplayName("12. Empty month")
     void shouldNotSendFormWithoutMonth() {
         paymentForm.fillTheForm(DataHelper.generateValidCardData(expiryYears));
         paymentForm.clearField(paymentForm.getMonth());
@@ -224,7 +230,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("13. Should not send form without year")
+    @DisplayName("13. Empty year")
     void shouldNotSendFormWithoutYear() {
         paymentForm.fillTheForm(DataHelper.generateValidCardData(expiryYears));
         paymentForm.clearField(paymentForm.getYear());
@@ -234,7 +240,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("14. Should not send form without card owner")
+    @DisplayName("14. Empty card owner")
     void shouldNotSendFormWithoutCardOwner() {
         paymentForm.fillTheForm(DataHelper.generateValidCardData(expiryYears));
         paymentForm.clearField(paymentForm.getCardOwner());
@@ -244,7 +250,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("15. Should not send form without cvc/cvv")
+    @DisplayName("15. Empty CVC/CVV")
     void shouldNotSendFormWithoutCVC() {
         paymentForm.fillTheForm(DataHelper.generateValidCardData(expiryYears));
         paymentForm.clearField(paymentForm.getCvc());
@@ -254,7 +260,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("16. Should not send empty form")
+    @DisplayName("16. Empty form")
     void shouldNotSendEmptyForm() {
         paymentForm.getContinueButton().click();
 
@@ -266,7 +272,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("17. Should not send form with incomplete card number")
+    @DisplayName("17. Incomplete card number")
     void shouldNotSendFormWithIncompleteCardNumber() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithIncompleteNumber(expiryYears, cardNumberMaxLength - 1));
         paymentForm.getContinueButton().click();
@@ -275,7 +281,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("18. Should not enter more symbols, than card number length")
+    @DisplayName("18. Enter more symbols, than card number length")
     void shouldNotEnterMoreSymbolsInCardNumber() {
         String cardNumberExt = DataHelper.generateNumericCode(cardNumberMaxLength + 1);
         String expected = cardNumberExt.substring(0, cardNumberMaxLength);
@@ -287,7 +293,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("19. Should not enter invalid symbols in card number")
+    @DisplayName("19. Enter invalid symbols in card number")
     void shouldNotEnterInvalidCardNumber() {
         paymentForm.fillField(paymentForm.getCard(), DataHelper.getInvalidSymbolsForNumericFields());
         String actual = paymentForm.getFieldValue(paymentForm.getCard()).replaceAll("\\s+","");
@@ -296,7 +302,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("20. Should not send form with card of zeroes")
+    @DisplayName("20. Card number consists of zeroes")
     void shouldNotSendFormWithZeroCard() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithZeroCard(expiryYears));
         paymentForm.getContinueButton().click();
@@ -305,7 +311,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("21. Should not send form with zero month")
+    @DisplayName("21. Zero month")
     void shouldNotSendFormWithZeroMonth() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithZeroMonth(expiryYears));
         paymentForm.getContinueButton().click();
@@ -314,7 +320,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("22. Should not send form with wrong month")
+    @DisplayName("22. Non-existent month")
     void shouldNotSendFormWithWrongMonth() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithWrongMonth(expiryYears));
         paymentForm.getContinueButton().click();
@@ -323,7 +329,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("23. Should not send form with incomplete month")
+    @DisplayName("23. Incomplete month (only 1 digit)")
     void shouldNotSendFormWithIncompleteMonth() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithMonthInvalidLength(1, expiryYears));
         paymentForm.getContinueButton().click();
@@ -332,7 +338,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("24. Should not enter more symbols, than month length")
+    @DisplayName("24. Enter more symbols, than month length")
     void shouldNotEnterMoreSymbolsInMonth() {
         String monthExt = DataHelper.generateNumericCode(3);
         String expected = monthExt.substring(0, 2);
@@ -344,7 +350,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("25. Should not enter invalid symbols in month")
+    @DisplayName("25. Enter invalid symbols in month")
     void shouldNotEnterInvalidSymbolsInMonth() {
         paymentForm.fillField(paymentForm.getMonth(), DataHelper.getInvalidSymbolsForNumericFields());
         String actual = paymentForm.getFieldValue(paymentForm.getMonth());
@@ -353,7 +359,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("26. Should not send form with zero year")
+    @DisplayName("26. Zero year")
     void shouldNotSendFormWithZeroYear() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithZeroYear());
         paymentForm.getContinueButton().click();
@@ -362,7 +368,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("27. Should not send form with incomplete year")
+    @DisplayName("27. Incomplete year")
     void shouldNotSendFormWithIncompleteYear() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithYearInvalidLength(1));
         paymentForm.getContinueButton().click();
@@ -371,7 +377,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("28. Should not enter more symbols, than year length")
+    @DisplayName("28. Enter more symbols, than year length")
     void shouldNotEnterMoreSymbolsInYear() {
         String yearExt = DataHelper.generateNumericCode(3);
         String expected = yearExt.substring(0, 2);
@@ -383,7 +389,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("29. Should not enter invalid symbols in year")
+    @DisplayName("29. Enter invalid symbols in year")
     void shouldNotEnterInvalidSymbolsInYear() {
         paymentForm.fillField(paymentForm.getYear(), DataHelper.getInvalidSymbolsForNumericFields());
         String actual = paymentForm.getFieldValue(paymentForm.getYear());
@@ -392,7 +398,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("30. Should not send form with previous year")
+    @DisplayName("30. Previous year (card expired)")
     void shouldNotSendFormWithPrevYear() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithShiftedYearFromCurrent(-1));
         paymentForm.getContinueButton().click();
@@ -401,7 +407,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("31. Should not send form with more than expiry years")
+    @DisplayName("31. More than expiry years")
     void shouldNotSendFormWithMoreThanExpiryYear() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithShiftedYearFromCurrent(expiryYears + 1));
         paymentForm.getContinueButton().click();
@@ -410,7 +416,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("32. Should not send form with card expired in previous month")
+    @DisplayName("32. Card expired in previous month")
     void shouldNotSendFormWithExpiryDateInPrevMonth() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithShiftedMonthFromCurrent(-1));
         paymentForm.getContinueButton().click();
@@ -419,7 +425,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("33. Should not send form with incomplete card owner")
+    @DisplayName("33. Incomplete card owner (only one word)")
     void shouldNotSendFormWithIncompleteCardOwner() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithIncompleteCardOwner(expiryYears));
         paymentForm.getContinueButton().click();
@@ -428,7 +434,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("34. Should not send form with cyrillic symbols in card owner")
+    @DisplayName("34. Cyrillic symbols in card owner")
     void shouldNotSendFormWithCyrillicCardOwner() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithInvalidCardOwnerLocale("ru", expiryYears));
         paymentForm.getContinueButton().click();
@@ -437,7 +443,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("35. Should not send form with invalid symbols in card owner")
+    @DisplayName("35. Invalid symbols in card owner")
     void shouldNotSendFormWithInvalidCardOwner() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithInvalidCardOwnerSymbols(expiryYears));
         paymentForm.getContinueButton().click();
@@ -446,7 +452,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("36. Should not send form with spaces in card owner")
+    @DisplayName("36. Spaces instead of card owner")
     void shouldNotSendFormWithSpacesInCardOwner() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithCardOwnerSpaces(expiryYears));
         paymentForm.getContinueButton().click();
@@ -455,7 +461,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("37. Should not send form card owner more than 27 symbols")
+    @DisplayName("37. Card owner length more than 27 symbols")
     void shouldNotSendFormWithOverlongCardOwner() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithCardOwnerFixedLength(cardOwnerMaxLength + 1, expiryYears));
         paymentForm.getContinueButton().click();
@@ -465,7 +471,7 @@ public class PaymentTest {
 
 
     @Test
-    @DisplayName("38. Should not send form with incomplete CVC")
+    @DisplayName("38. Incomplete CVC")
     void shouldNotSendFormWithIncompleteCVC() {
         paymentForm.fillTheForm(DataHelper.generateCardDataWithCVCInvalidLength(2, expiryYears));
         paymentForm.getContinueButton().click();
@@ -474,7 +480,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("39. Should not enter more symbols, than CVC length")
+    @DisplayName("39. Enter more symbols, than CVC length")
     void shouldNotEnterMoreSymbolsInCVC() {
         String cvcExt = DataHelper.generateNumericCode(4);
         String expected = cvcExt.substring(0, 3);
@@ -486,7 +492,7 @@ public class PaymentTest {
     }
 
     @Test
-    @DisplayName("40. Should not enter invalid symbols in CVC")
+    @DisplayName("40. Enter invalid symbols in CVC")
     void shouldNotEnterInvalidSymbolsInCVC() {
         paymentForm.fillField(paymentForm.getCvc(), DataHelper.getInvalidSymbolsForNumericFields());
         String actual = paymentForm.getFieldValue(paymentForm.getCvc());
@@ -503,8 +509,4 @@ public class PaymentTest {
 
      */
 
-    @AfterAll
-    static void tearDownAll() {
-        SelenideLogger.removeListener("allure");
-    }
 }

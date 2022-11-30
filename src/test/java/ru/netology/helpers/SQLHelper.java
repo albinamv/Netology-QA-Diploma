@@ -1,15 +1,16 @@
 package ru.netology.helpers;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 
 import java.sql.DriverManager;
 import java.util.Arrays;
-import java.sql.*;
 
-@Getter
 public class SQLHelper {
     private SQLHelper() {
     }
@@ -40,21 +41,27 @@ public class SQLHelper {
         } else {
             return 0;
         }
+    }
 
+    @Getter
+    @Setter
+    public static class Payment {
+        private String status;
+        private String amount;
     }
 
     @SneakyThrows
-    public static String getLastStatusFromPaymentsTable() {
-        var statusQuery = "SELECT status FROM payment_entity WHERE transaction_id = (SELECT payment_id FROM order_entity ORDER BY created DESC LIMIT 1);";
-        String status;
+    public static Payment getLastEntryFromPaymentsTable() {
+        var statusQuery = "SELECT status, amount FROM payment_entity WHERE transaction_id = (SELECT payment_id FROM order_entity ORDER BY created DESC LIMIT 1);";
+        Payment payment;
+        ResultSetHandler<Payment> resultHandler = new BeanHandler<Payment>(Payment.class);
 
         try (
                 var conn = DriverManager.getConnection(urlMySQL, userDB, passwordDB);
         ) {
-            status = runner.query(conn, statusQuery, new ScalarHandler<>());
+            payment = runner.query(conn, statusQuery, resultHandler);
         }
-        return status;
-
+        return payment;
     }
 
     @SneakyThrows
