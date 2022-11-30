@@ -500,13 +500,4 @@ public class PaymentTest extends TestBase {
         assertEquals("", actual);
     }
 
-    /*
-    @AfterAll
-    @SneakyThrows
-    static void cleanDB() {
-        SQLHelper.cleanDatabase();
-    }
-
-     */
-
 }

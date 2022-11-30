@@ -1,27 +1,29 @@
-# Запуск авто-тестов
+# Дипломный проект по профессии «Тестировщик»
 
-## Шаги по воспроизведению :
-1. Запустить контейнеры в терминале
-`docker-compose up`
+## Документы
+- [План автоматизации](https://github.com/albinamv/QA-Diploma/blob/main/docs/Plan.md)
 
-2. Запустить SUT командой
-`java -jar artifacts/aqa-shop.jar`
+## Запуск авто-тестов
 
-3. Приложение должно запуститься на:
-`http://localhost:8080/`
+### Предустановка программ
+1. Установка Docker Desktop с [официального сайта](https://www.docker.com/) (для Windows 10 (и выше), либо Linux/MacOS)
 
-4. Запустить авто-тесты командой
-`gradlew clean test`
+### Шаги по воспроизведению
+1. Открыть Docker Desktop
+2. Перейти в терминал
+3. Запустить контейнеры в терминале командой
+```docker-compose up```
+4. Запустить SUT командой
+```java -jar artifacts/aqa-shop.jar```
+6. Запустить авто-тесты командой
+```gradlew clean test```
 или
-`./gradlew clean test`
+```./gradlew clean test```
+7. Сгенерировать отчёты командами
+```gradlew allureReport gradlew allureServe```
 
-5. Сгенерировать отчеты
-`gradlew allureReport
-gradlew allureServe`
+8. Для завершения работы allureServe выполнить команду:
+`Ctrl + С`, далее `Y`
 
-6. Для завершения работы allureServe выполнить команду:
-`Ctrl + С` 
-далее Y
-
-7. Остановить и удалить все контейнеры
-`docker-compose down`
+9. Остановить и удалить все контейнеры
+```docker-compose down```
