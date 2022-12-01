@@ -16,10 +16,12 @@ public class SQLHelper {
     }
 
     private final static String[] tableNames = {"credit_request_entity", "payment_entity", "order_entity"};
-    static final String urlMySQL = "jdbc:mysql://localhost:3306/app";
-    static final String urlPostgreSQL = "jdbc:postgresql://localhost:5432/app";
-    static final String userDB = "app";
-    static final String passwordDB = "pass";
+
+    //private static String dbUrl = System.getProperty("db.url"); //для запуска из консоли
+    //private static final String dbUrl = "jdbc:postgresql://localhost:5432/app";
+    private static final String dbUrl = "jdbc:mysql://localhost:3306/app";
+    private static final String userDB = "app";
+    private static final String passwordDB = "pass";
     static QueryRunner runner = new QueryRunner();
 
     private static boolean tableExists(String item) {
@@ -33,7 +35,7 @@ public class SQLHelper {
             long rowsAmount;
 
             try (
-                    var conn = DriverManager.getConnection(urlMySQL, userDB, passwordDB);
+                    var conn = DriverManager.getConnection(dbUrl, userDB, passwordDB);
             ) {
                 rowsAmount = runner.query(conn, rowsAmountQuery, new ScalarHandler<>());
             }
@@ -57,7 +59,7 @@ public class SQLHelper {
         ResultSetHandler<Payment> resultHandler = new BeanHandler<Payment>(Payment.class);
 
         try (
-                var conn = DriverManager.getConnection(urlMySQL, userDB, passwordDB);
+                var conn = DriverManager.getConnection(dbUrl, userDB, passwordDB);
         ) {
             payment = runner.query(conn, statusQuery, resultHandler);
         }
@@ -70,7 +72,7 @@ public class SQLHelper {
         String status;
 
         try (
-                var conn = DriverManager.getConnection(urlMySQL, userDB, passwordDB);
+                var conn = DriverManager.getConnection(dbUrl, userDB, passwordDB);
         ) {
             status = runner.query(conn, statusQuery, new ScalarHandler<>());
         }
@@ -80,7 +82,7 @@ public class SQLHelper {
     @SneakyThrows
     public static void cleanDatabase() {
         try (
-                var conn = DriverManager.getConnection(urlMySQL, userDB, passwordDB);
+                var conn = DriverManager.getConnection(dbUrl, userDB, passwordDB);
         ) {
             for (int i = 0; i < tableNames.length; i++) {
                 runner.execute(conn, "DELETE FROM " + tableNames[i] + ";");
