@@ -17,9 +17,9 @@ public class SQLHelper {
 
     private final static String[] tableNames = {"credit_request_entity", "payment_entity", "order_entity"};
 
-    //private static String dbUrl = System.getProperty("db.url"); //для запуска из консоли
+    private static String dbUrl = System.getProperty("db.url"); //для запуска из консоли
     //private static final String dbUrl = "jdbc:postgresql://localhost:5432/app";
-    private static final String dbUrl = "jdbc:mysql://localhost:3306/app";
+    //private static final String dbUrl = "jdbc:mysql://localhost:3306/app";
     private static final String userDB = "app";
     private static final String passwordDB = "pass";
     static QueryRunner runner = new QueryRunner();
