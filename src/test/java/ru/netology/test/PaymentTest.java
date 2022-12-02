@@ -209,7 +209,6 @@ public class PaymentTest extends TestBase {
         }
     }
 
-    /*
     @Test
     @DisplayName("11. Empty card number")
     void shouldNotSendFormWithoutCardNumber() {
@@ -500,6 +499,5 @@ public class PaymentTest extends TestBase {
 
         assertEquals("", actual);
     }
-    */
 
 }

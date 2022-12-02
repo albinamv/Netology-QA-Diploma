@@ -186,7 +186,7 @@ public class CreditTest extends TestBase {
         }
     }
 
-    /*
+
     @Test
     @DisplayName("51. Empty card number")
     void shouldNotSendFormWithoutCardNumber() {
@@ -477,7 +477,5 @@ public class CreditTest extends TestBase {
 
         assertEquals("", actual);
     }
-
-     */
 
 }
