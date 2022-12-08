@@ -2,6 +2,8 @@
 
 ## Документы
 - [План автоматизации](https://github.com/albinamv/QA-Diploma/blob/main/docs/Plan.md)
+- [Отчёт по итогам тестирования](https://github.com/albinamv/QA-Diploma/blob/main/docs/Report.md)
+- [Отчёт по итогам автоматизации](https://github.com/albinamv/QA-Diploma/blob/main/docs/Summary.md)
 
 ## Запуск авто-тестов
 
