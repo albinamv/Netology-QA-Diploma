@@ -1,9 +1,16 @@
 # Дипломный проект по профессии «Тестировщик»
+Основная задача: автоматизация тестирования комплексного сервиса, взаимодействующего с СУБД и API Банка.
 
-## Документы
-- [План автоматизации](https://github.com/albinamv/QA-Diploma/blob/main/docs/Plan.md)
-- [Отчёт по итогам тестирования](https://github.com/albinamv/QA-Diploma/blob/main/docs/Report.md)
-- [Отчёт по итогам автоматизации](https://github.com/albinamv/QA-Diploma/blob/main/docs/Summary.md)
+[Читать подробнее о задаче и тестируемом приложении](https://github.com/albinamv/Netology-QA-Diploma/blob/main/docs/TaskDiploma.md)
+
+
+## Что было сделано:
+1. Настроено окружение для запуска симулятора и SUT с поддержкой СУБД MySQL и PostgreSQL. 
+2. Составлен [план автоматизации тестирования](https://github.com/albinamv/Netology-QA-Diploma/blob/main/docs/Plan.md). Всего было описано по 40 сценариев для каждой из двух форм.
+3. Написаны авто-тесты для всех сценариев, прописанных в плане. Работа выполнена согласно шаблону проектирования Page Object, также были написаны отдельные классы-хелперы для генерации тестовых данных и запросов к БД. [Перейти к инструкции по запуску авто-тестов.](https://github.com/albinamv/Netology-QA-Diploma#%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA-%D0%B0%D0%B2%D1%82%D0%BE-%D1%82%D0%B5%D1%81%D1%82%D0%BE%D0%B2)
+4. Составлен [отчёт по итогам тестирования](https://github.com/albinamv/Netology-QA-Diploma/blob/main/docs/Report.md), заведены баг-репорты в разделе [Issues](https://github.com/albinamv/Netology-QA-Diploma/issues). Также даны рекомендации по улучшению страницы проекта.
+5. Составлен [отчёт по итогам автоматизации](https://github.com/albinamv/Netology-QA-Diploma/blob/main/docs/Summary.md). На автоматизацию было потрачено меньше часов, чем было запланировано.
+
 
 ## Запуск авто-тестов
 
@@ -13,8 +20,8 @@
 ### Шаги для запуска авто-тестов из консоли
 1. Открыть Docker Desktop
 2. Открыть консоль (для Windows: `Win+R` > Открыть `cmd`)
-3. Склонировать репозиторий: `git clone https://github.com/albinamv/QA-Diploma.git`
-4. Сменить папку: `cd QA-diploma`
+3. Склонировать репозиторий: `git clone https://github.com/albinamv/Netology-QA-Diploma.git`
+4. Сменить папку: `cd Netology-QA-Diploma`
 5. Запустить контейнеры (СУБД MySQL, PostgreSQL, gate-simulator) в консоли: `docker-compose up -d`
 6. Запустить SUT
    1. Команда для запуска с поддержкой СУБД MySQL: `java -Dspring.datasource.url=jdbc:mysql://localhost:3306/app -jar artifacts/aqa-shop.jar`

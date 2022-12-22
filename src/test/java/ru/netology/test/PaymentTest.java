@@ -326,6 +326,7 @@ public class PaymentTest extends TestBase {
         paymentForm.checkMonthError("Неверный формат", 2);
     }
 
+    //
     @Test
     @DisplayName("24. Enter more symbols, than month length")
     void shouldNotEnterMoreSymbolsInMonth() {
