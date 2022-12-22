@@ -8,7 +8,7 @@
 1. Обычная оплата по дебетовой карте.
 2. Уникальная технология: выдача кредита по данным банковской карты.
 
-![service.png](C:\Users\79020\Desktop\Netology\Autotesting\Netology-QA-Diploma\docs\img\service.png)
+![service.png](img/service.png)
 
 Само приложение не обрабатывает данные по картам, а пересылает их банковским сервисам:
 * сервису платежей, далее Payment Gate;
